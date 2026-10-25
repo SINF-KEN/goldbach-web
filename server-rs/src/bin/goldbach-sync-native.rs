@@ -204,6 +204,69 @@ fn gap_history(root: &Path) -> Vec<Value> {
     out
 }
 
+/// Figure 4's p(n) snapshots of a range run again (the gap backfill, goldbach_l0 with
+/// GBPSAMP rows): each row is one slice's sampled histogram (psev evens, psamp counts by
+/// prime index, classes summed), one row per start. Upward from RANGE_LO the rows are
+/// summed, as for the gaps. Above that, a boundary x is still exact while rows cover
+/// (x, end] contiguously: the state (`counts`, `evens`, cumulative to `end`) minus those
+/// rows, the backfill sampling the same segments as the run that built the state.
+/// Snapshots sit at the HISTORY_STEP boundaries (x = the limit of the slice ending there).
+fn psamp_history(root: &Path, end: u64, counts: &[u64], evens: u64) -> Vec<Value> {
+    fn rows(root: &Path, n: usize) -> Option<HashMap<u64, (u64, u64, Vec<u64>)>> {
+        let mut rows = HashMap::new();
+        for line in std::fs::read_to_string(root.join("goldbach_stats.log")).ok()?.lines() {
+            if !line.starts_with("GBPSAMP ") {
+                continue;
+            }
+            let kv = kvs(line.split_whitespace().skip(2));
+            let start = kv.get("start")?.parse().ok()?;
+            let mut v = vec![0u64; n];
+            for (i, c) in kv.get("psamp")?.split(',').take(n).enumerate() {
+                v[i] = if c.is_empty() { 0 } else { c.parse().ok()? };
+            }
+            rows.entry(start).or_insert((kv.get("limit")?.parse().ok()?, kv.get("psev")?.parse().ok()?, v));
+        }
+        Some(rows)
+    }
+    let n = counts.len();
+    let Some(rows) = rows(root, n) else { return vec![] };
+    let step = HISTORY_STEP as u64;
+    let boundary = |lim: u64| (lim + 2 - RANGE_LO) % step == 0;
+    let snap = |x: u64, ev: u64, c: Vec<u64>| json!({ "x": x.to_string(), "evens": ev, "counts": c });
+    let mut out = vec![];
+    // upward: the rows alone, contiguous from RANGE_LO
+    let (mut cur, mut ev, mut acc) = (RANGE_LO, 0u64, vec![0u64; n]);
+    while let Some((lim, pe, c)) = rows.get(&cur) {
+        ev += pe;
+        acc.iter_mut().zip(c).for_each(|(a, b)| *a += b);
+        if boundary(*lim) && *lim <= end {
+            out.push(snap(*lim, ev, acc.clone()));
+        }
+        cur = lim + 2;
+    }
+    let top = cur; // rows cover [RANGE_LO, top - 2]
+    // downward: the state at `end` minus the rows above x
+    let by_limit: HashMap<u64, u64> = rows.iter().map(|(s, r)| (r.0, *s)).collect();
+    let (mut hi, mut ev, mut acc) = (end, 0u64, vec![0u64; n]);
+    let mut down = vec![];
+    while let Some(&s) = by_limit.get(&hi) {
+        let (_, pe, c) = &rows[&s];
+        ev += pe;
+        acc.iter_mut().zip(c).for_each(|(a, b)| *a += b);
+        let x = s - 2;
+        if s <= RANGE_LO || x < top {
+            break; // the upward sums hold it (or nothing lies below)
+        }
+        if boundary(x) && ev <= evens && acc.iter().zip(counts).all(|(a, b)| a <= b) {
+            down.push(snap(x, evens - ev, counts.iter().zip(&acc).map(|(b, a)| b - a).collect()));
+        }
+        hi = x;
+    }
+    down.reverse();
+    out.extend(down);
+    out
+}
+
 /// Keeps a gzipped copy of the statistics state (+ its gap file) each time the p(n) or
 /// the gap range crosses an ARCHIVE_STEP boundary. Never fails the sync.
 fn archive_state(p: &Paths, rng: &Option<[String; 2]>, gap_ranges: &[[String; 2]]) {
@@ -342,6 +405,17 @@ fn paper(p: &Paths, rows: &[Row], bnd: &[(u64, u64)], primes: &[u64]) -> R<Value
     // whatever range banks gaps (the backfill too) and however late the sync runs, none
     // goes missing
     let xs: HashSet<String> = pn.iter().map(|s| text_of(&s["x"])).collect();
+    // Figure 4's columns of a range run again come from its GBPSAMP rows the same way
+    // (rebuilt every time, sent but not kept: the kept history is the live cadence's;
+    // a gap snapshot at the same x stays a separate entry, each figure reads its own)
+    let ps: Vec<Value> = match &rng {
+        Some(r) => {
+            let k = primes.iter().filter(|p| **p < 250).count();
+            let small: Vec<u64> = (0..k).map(|i| sampled.get(i).copied().unwrap_or(0)).collect();
+            psamp_history(&p.root, num(&r[1])?, &small, sampled_evens).into_iter().filter(|s| !xs.contains(&text_of(&s["x"]))).collect()
+        }
+        None => vec![],
+    };
     let gs: Vec<Value> = gap_history(&p.root).into_iter().filter(|s| !xs.contains(&text_of(&s["x"]))).collect();
     let mut hist: Vec<Value> = pn.iter().chain(&gs).cloned().collect();
     hist.sort_by_key(|s| xnum(&s["x"]));
@@ -357,6 +431,7 @@ fn paper(p: &Paths, rows: &[Row], bnd: &[(u64, u64)], primes: &[u64]) -> R<Value
     let slices: Vec<Value> = series.iter().map(|r| json!([r.0, r.1, r.4])).collect();
     let counts: Vec<Value> = series.iter().map(|r| json!([r.1, r.2, r.3])).collect();
     let mut fig4 = thin(&pn, HISTORY_SEND);
+    fig4.extend(thin(&ps, HISTORY_SEND));
     fig4.extend(thin(&gs, HISTORY_SEND));
     fig4.sort_by_key(|s| xnum(&s["x"]));
     Ok(json!({
@@ -628,6 +703,37 @@ mod tests {
         std::fs::write(&f, "PASS 10 20 t1 primes=1 twins=2 gpu_s=3\nRECHECK 10 20 t2 primecount_ok=1 primes=5 twins=6\nnoise\n").unwrap();
         let (rows, stamps) = journal_rows(&f).unwrap();
         assert_eq!((rows[0].2["primes"].as_str(), rows[0].2["twins"].as_str(), stamps[&10].as_str()), ("5", "6", "t1"));
+    }
+
+    #[test]
+    fn figure_4_columns_of_a_rerun_range_come_from_gbpsamp_rows() {
+        let td = tmp("psamp");
+        let (lo, step) = (RANGE_LO, HISTORY_STEP as u64);
+        let end = lo + 4 * step - 2;
+        // half-step slices: two from RANGE_LO (upward sums), a hole, four ending at `end`
+        // (the state minus the rows above x); one logged twice, a gap row in between
+        let mut log = String::new();
+        for (k, c) in [(0, "1,2"), (1, "3,,1"), (4, "1,1"), (5, "2"), (6, ",4"), (6, "9,9"), (7, "1,1,1")] {
+            let a = lo + k * step / 2;
+            log += &format!("GBPSAMP v1 version=t start={a} limit={} evens={} psev={} psamp={c}\n", a + step / 2 - 2, step / 4, 10 + k);
+            log += &format!("GBGAPS v1 start={a} limit={} evens=1 gsamp=,1\n", a + step / 2 - 2);
+        }
+        std::fs::write(td.join("goldbach_stats.log"), log).unwrap();
+        let h = psamp_history(&td, end, &[100, 100, 100], 1000);
+        let got: Vec<(String, u64, Vec<u64>)> = h
+            .iter()
+            .map(|s| (text_of(&s["x"]), s["evens"].as_u64().unwrap(), s["counts"].as_array().unwrap().iter().map(|c| c.as_u64().unwrap()).collect()))
+            .collect();
+        assert_eq!(
+            got,
+            [
+                ((lo + step - 2).to_string(), 10 + 11, vec![4, 2, 1]),               // upward: rows 0 + 1
+                ((lo + 2 * step - 2).to_string(), 1000 - (14 + 15 + 16 + 17), vec![96, 94, 99]), // state minus rows 4..7
+                ((lo + 3 * step - 2).to_string(), 1000 - (16 + 17), vec![99, 95, 99]),          // state minus rows 6, 7
+            ],
+            "the slice logged twice counts once (its first row); nothing is invented across the hole"
+        );
+        assert!(psamp_history(&td.join("missing"), end, &[1], 1).is_empty());
     }
 
     fn tmp(name: &str) -> PathBuf {
