@@ -242,7 +242,14 @@ pub fn board(s: &Value, narrow: bool) -> String {
         "  ",
     ));
     l.push(String::new());
-    let head = format!("B580 LATEST SLICES{}", if bf.is_some() { " (gap backfill)" } else { "" });
+    let head = format!(
+        "B580 LATEST SLICES{}",
+        match bf.and_then(|b| get(b, "what")).filter(|v| truthy(v)).map(str_of) {
+            None if bf.is_none() => String::new(),
+            Some(w) if w != "gaps" => format!(" (backfill: {w})"),
+            _ => " (gap backfill)".into(),
+        }
+    );
     if narrow {
         l.extend([head, "uploaded as each slice is banked".into()]);
     } else {

@@ -550,7 +550,9 @@ fn backfill_progress(root: &Path, main_resume: u64) -> Option<Value> {
     let (rows, stamps) = journal_rows(&root.join(jn)).ok()?;
     let resume = contiguous(&rows, lo);
     let rate = speed(&rows).ok()?;
-    let mut out = json!({ "what": "gaps", "start": lo.to_string(), "limit": hi.to_string(), "resume": resume.to_string(),
+    // what the range re-runs for (production.json "what"; the first backfill: the gaps)
+    let what = pc["what"].as_str().unwrap_or("gaps");
+    let mut out = json!({ "what": what, "start": lo.to_string(), "limit": hi.to_string(), "resume": resume.to_string(),
         "slices": rows.len(), "pct": round_to(100.0 * (resume - lo) as f64 / (hi + 2 - lo) as f64, 4), "rate": rate,
         "eta_days": if rate > 0.0 { json!(round_to((hi + 2 - resume) as f64 / 2.0 / rate / 86400.0, 2)) } else { Value::Null },
         "desired": pc.get("desired").cloned().unwrap_or(json!("")), "recent": recent_slices(&rows, &stamps).ok()? });
