@@ -1,7 +1,7 @@
 //! Pushes the native B580 campaign's state to the goldbach-web coordinator.
 //!
 //! Reads (read-only) the production journal, ridge store and statistics log in the
-//! native campaign directory (GOLDBACH_CAMPAIGN_DIR, default ~/coding/goldbach-l0-tidy)
+//! native campaign directory (GOLDBACH_CAMPAIGN_DIR, default ~/coding/goldbach-l0)
 //! and POSTs a summary to /api/native: progress (resume point, banked slices, recent
 //! speed), the top ridges, the p(n) tail histogram, and the floor below which browsers
 //! get no slices (the B580's resume point plus FLOOR_AHEAD_DAYS of its progress, so the
@@ -44,7 +44,7 @@ struct Paths {
 fn paths() -> Paths {
     let env = |k: &str, d: PathBuf| std::env::var(k).map(PathBuf::from).unwrap_or(d);
     Paths {
-        root: env("GOLDBACH_CAMPAIGN_DIR", home().join("coding/goldbach-l0-tidy")),
+        root: env("GOLDBACH_CAMPAIGN_DIR", home().join("coding/goldbach-l0")),
         history: env("GOLDBACH_FIG4_HISTORY", home().join(".local/state/goldbach-sync/fig4.json")),
         archive: env("GOLDBACH_STATE_ARCHIVE", home().join(".local/state/goldbach-sync/archive")),
     }

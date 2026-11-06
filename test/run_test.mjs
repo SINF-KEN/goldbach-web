@@ -15,8 +15,8 @@ const limit = BigInt(process.argv.slice(2)[1] ?? "4000000020000000000");
 const segment = BigInt(process.argv.slice(2)[2] ?? "467500000");
 const K = Number(process.argv.slice(2)[3] ?? "64");
 const pref = process.argv.slice(2)[4] ?? "high-performance";
-// native goldbach_l0 checkout to compare against (GOLDBACH_L0_DIR, default ../goldbach-l0-tidy)
-const root = (process.env["GOLDBACH_L0_DIR"] ?? new URL("../../goldbach-l0-tidy/", import.meta.url).pathname).replace(/\/?$/, "/");
+// native goldbach_l0 checkout to compare against (GOLDBACH_L0_DIR, default ../goldbach-l0)
+const root = (process.env["GOLDBACH_L0_DIR"] ?? new URL("../../goldbach-l0/", import.meta.url).pathname).replace(/\/?$/, "/");
 
 // ---- native run, isolated statistics files ----
 const tmp = await mkdtemp(join(tmpdir(), "gbweb-"));

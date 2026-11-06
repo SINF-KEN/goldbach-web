@@ -8,7 +8,7 @@
 #   bash tools/gpu_slot.sh node test/timeline.mjs
 # Exit status: the command's, or 1 if production could not be paused.
 set -euo pipefail
-L0=${GB_L0_DIR:-$HOME/coding/goldbach-l0-tidy}
+L0=${GB_L0_DIR:-$HOME/coding/goldbach-l0}
 STATE=$HOME/.cache/goldbach-web-bench           # shared with bench_ci.sh: one pause marker
 mkdir -p "$STATE"
 log() { echo "[gpu_slot $(date +%T)] $*" >&2; }

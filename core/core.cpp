@@ -1,5 +1,5 @@
 // goldbach-web core: the host-side mathematics of the dense verifier, shared
-// with the native build (shared/: copies of goldbach-l0-tidy's src/primes.cpp,
+// with the native build (shared/: copies of goldbach-l0's src/primes.cpp,
 // include/{config,primes,gstats}.hpp) and compiled to
 // WebAssembly with Emscripten (web/core/build.sh). Everything here is exact
 // 64-bit integer arithmetic; the GPU side (web/kernels/*.wgsl) only ever

@@ -8,7 +8,7 @@
   <b>Help verify the Goldbach conjecture from a browser tab.</b><br>
   <a href="https://goldbach.net01.io">Live site</a> ·
   <a href="https://goldbach.net01.io/paper.html">Live paper</a> ·
-  <a href="https://github.com/SINF-KEN/goldbach-l0-tidy">Native verifier</a>
+  <a href="https://github.com/SINF-KEN/goldbach-l0">Native verifier</a>
 </p>
 
 <p align="center">
@@ -17,7 +17,7 @@
   <img alt="Rust" src="https://img.shields.io/badge/server-Rust-B7410E">
 </p>
 
-The dense Goldbach verifier of [goldbach-l0-tidy](https://github.com/SINF-KEN/goldbach-l0-tidy)
+The dense Goldbach verifier of [goldbach-l0](https://github.com/SINF-KEN/goldbach-l0)
 ported to **WebGPU + WebAssembly**, plus the coordinator that runs
 **https://goldbach.net01.io**: browsers verify slices of [4·10¹⁸, 5·10¹⁸] from the
 top down while the native B580 run works from the bottom up.
@@ -31,7 +31,7 @@ the candidate list): the tests below compare them on real windows.
 | Path | What |
 |---|---|
 | `core/core.cpp` | host mathematics (exact 64-bit), compiled to WASM with Emscripten; natively it is the test oracle |
-| `shared/` | copies of `goldbach-l0-tidy`'s `src/primes.cpp` and `include/{config,primes,gstats}.hpp` (keep in sync) |
+| `shared/` | copies of `goldbach-l0`'s `src/primes.cpp` and `include/{config,primes,gstats}.hpp` (keep in sync) |
 | `kernels/*.wgsl` | tile sieve, large primes, hit-list harvest, checker, prime/twin counts |
 | `client/engine.js` | the pipeline on WebGPU (browsers and Node.js with Dawn), segments in flight |
 | `client/worker.js` | leases slices and verifies them until Stop (self-test, retries, device recreation) |
@@ -117,7 +117,7 @@ Every change is a branch. Pushing it is all it takes:
    self-hosted runner `computer-b580-web` on the Arc B580 machine):
    * candidate = the branch merged with the current main (exactly what would land);
    * pauses the native production campaign at a slice boundary and takes the shared
-     GPU lock (`goldbach-l0-tidy/.goldbach-gpu.lock`); production resumes 2 minutes
+     GPU lock (`goldbach-l0/.goldbach-gpu.lock`); production resumes 2 minutes
      after the job unless another benchmark starts (queued branches share one pause);
    * exactness: the six golden result hashes (`test/golden.sh gpu`), modq vs BigInt,
      and identical results to main in every repetition; the base primes are
@@ -202,4 +202,3 @@ listening on 172.18.0.1:8090 behind Traefik). Data: `/opt/goldbach/data`.
   per slice, only with spare CPU. It always runs the best engine it has: at start
   and daily it times every candidate (portable / CPU-tuned build x segment size)
   on the known window and keeps the fastest exact one.
-* History of this code: branch `web-port` of goldbach-l0-tidy.

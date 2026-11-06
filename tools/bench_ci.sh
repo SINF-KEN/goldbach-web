@@ -4,7 +4,7 @@
 #
 #   candidate = the branch merged with the current main (what would land)
 #   1. GPU slot: if the native production campaign runs, pause it at a slice
-#      boundary (goldbach-l0-tidy ci/goldbach_ci.py) and take the shared GPU
+#      boundary (goldbach-l0 ci/goldbach_ci.py) and take the shared GPU
 #      flock; the slot is released right after the last measurement (report,
 #      merge and deploy run with production back on the GPU); production
 #      resumes GB_RESUME_DELAY s later if another benchmark job is queued
@@ -16,12 +16,12 @@
 #   4. report (goldbach-tools bench-report, server-rs/src/bin/goldbach-tools): commit comment + job summary
 #   5. exact and significantly faster: push the candidate to main and deploy
 #
-# env: GB_L0_DIR (default ~/coding/goldbach-l0-tidy), GB_REPS (8 = 4 ABBA pairs),
+# env: GB_L0_DIR (default ~/coding/goldbach-l0), GB_REPS (8 = 4 ABBA pairs),
 #      GB_RESUME_DELAY (120), GB_RESUME_SOON (10), GB_NO_MERGE=1 (report only)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT=$PWD
-L0=${GB_L0_DIR:-$HOME/coding/goldbach-l0-tidy}
+L0=${GB_L0_DIR:-$HOME/coding/goldbach-l0}
 REPO=${GITHUB_REPOSITORY:-SINF-KEN/goldbach-web}
 REPS=${GB_REPS:-8}
 SHA=$(git rev-parse HEAD)
