@@ -1,12 +1,13 @@
 name: CI
 
-# Docs-only changes never start CI (and need no deploy). Every other run asks
-# tools/ci_scope.sh how much it needs: skip (main tree already passed as a PR),
+# Docs-only pushes to main never start CI (and need no deploy). Pull requests
+# always run it: the ruleset on main requires this check, and a required check
+# that never reports blocks the merge. Every run asks tools/ci_scope.sh how much
+# it needs: skip (main tree already passed as a PR),
 # fast (page/coordinator only) or full (engine, kernels, core, CPU verifier).
 on:
   pull_request:
     branches: [main]
-    paths-ignore: ['**.md', 'docs/**', 'LICENSE']
   push:
     branches: [main]
     paths-ignore: ['**.md', 'docs/**', 'LICENSE']
