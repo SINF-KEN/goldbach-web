@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # CI entry point: .github/workflows/ci.yml
-# Run on the self-hosted B580 machine. WebGPU tests use Mesa lavapipe only
+# Runs on a GitHub-hosted runner. WebGPU tests use Mesa lavapipe only
 # (software Vulkan, CPU only), never the production GPU.
 set -euo pipefail
 cd "$(dirname "$0")/.."

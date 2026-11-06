@@ -25,9 +25,7 @@ permissions:
 jobs:
   ci:
     name: Tests (CPU, WASM, WebGPU software)
-    # Self-hosted runner: never run code from a fork's pull request on it.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, b580]
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
@@ -40,6 +38,14 @@ jobs:
           # a manual run has no base: full
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: bash tools/ci_scope.sh >> "$GITHUB_OUTPUT"
+      - uses: ./.github/actions/setup-build
+        if: steps.scope.outputs.scope != 'skip'
+      - name: Install lavapipe (software Vulkan for the WebGPU tests)
+        if: steps.scope.outputs.scope != 'skip'
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends mesa-vulkan-drivers libvulkan1
+          echo "GB_LAVAPIPE_ICD=$(ls /usr/share/vulkan/icd.d/lvp_icd*.json | head -1)" >> "$GITHUB_ENV"
       - name: Run CI
         if: steps.scope.outputs.scope != 'skip'
         env:
@@ -51,20 +57,31 @@ jobs:
     needs: ci
     # A manual run or PR must never deploy. Only a successful push to main does.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, b580]
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
+    # GB_DEPLOY_KEY and GB_DEPLOY_KNOWN_HOSTS live in this environment, which only main can use
+    environment: production
     # never while server-update.yml reboots the VPS (or refresh-reference.yml deploys)
     concurrency:
       group: deploy-main
       cancel-in-progress: false
+    env:
+      GB_DEPLOY_HOST: ${{ secrets.GB_DEPLOY_HOST }}
     steps:
       - uses: actions/checkout@v6
-      - name: Deploy website and coordinator
+      - name: SSH key for the VPS
         env:
-          GB_DEPLOY_HOST: ${{ secrets.GB_DEPLOY_HOST }}
-        run: bash server/deploy.sh
-      - name: Install the native sync (goldbach-sync.timer runs this copy)
-        # the runner is the B580 machine itself: the 10-minute sync follows main
+          GB_DEPLOY_KEY: ${{ secrets.GB_DEPLOY_KEY }}
+          GB_DEPLOY_KNOWN_HOSTS: ${{ secrets.GB_DEPLOY_KNOWN_HOSTS }}
         run: |
-          bin_dir=$(dirname "$(bash server-rs/build.sh)")
-          install -D -m 755 "$bin_dir/goldbach-sync-native" "$HOME/.local/share/goldbach-sync/goldbach-sync-native"
+          # The logs are public and the site's origin sits behind Cloudflare:
+          # the secret's mask covers user@host, not the bare address ssh may print.
+          echo "::add-mask::${GB_DEPLOY_HOST#*@}"
+          install -d -m 700 ~/.ssh
+          ( umask 077
+            printf '%s\n' "$GB_DEPLOY_KEY" > ~/.ssh/id_ed25519
+            printf '%s\n' "$GB_DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+            printf 'LogLevel ERROR\nStrictHostKeyChecking yes\n' > ~/.ssh/config )
+      - uses: ./.github/actions/setup-build
+      - name: Deploy website and coordinator
+        run: bash server/deploy.sh
