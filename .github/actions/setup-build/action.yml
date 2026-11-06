@@ -1,0 +1,24 @@
+name: Build tools
+description: Rust, Emscripten (~/emsdk, where core/build.sh looks) and the build caches
+runs:
+  using: composite
+  steps:
+    - name: Cache the Rust build and Emscripten
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cache/goldbach-web
+          ~/emsdk
+        key: build-${{ runner.os }}-emsdk-4.0.10-${{ hashFiles('server-rs/Cargo.lock') }}
+        restore-keys: build-${{ runner.os }}-emsdk-4.0.10-
+    - name: Install Rust and Emscripten
+      shell: bash
+      run: |
+        rustup toolchain install stable --profile minimal
+        rustup default stable
+        if [ ! -f "$HOME/emsdk/emsdk_env.sh" ]; then
+          git clone -q --depth 1 https://github.com/emscripten-core/emsdk.git "$HOME/emsdk"
+          "$HOME/emsdk/emsdk" install 4.0.10
+          "$HOME/emsdk/emsdk" activate 4.0.10
+        fi

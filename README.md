@@ -105,8 +105,8 @@ correct drivers; the self-test keeps an affected device from contributing.
 
 Every change is a branch. Pushing it is all it takes:
 
-1. **CI** (`.github/workflows/ci.yml` -> `tools/ci_local.sh`, on the self-hosted
-   runner below; no GitHub-hosted minutes): syntax, coordinator logic, WASM core,
+1. **CI** (`.github/workflows/ci.yml` -> `tools/ci_local.sh`, on a GitHub-hosted
+   runner): syntax, coordinator logic, WASM core,
    CPU verifier golden hashes, prime cache, live updates, WebGPU maps / modq /
    self-test on Mesa lavapipe (software Vulkan in `~/.local/share/lavapipe`;
    Dawn on the Vulkan backend only (never the OpenGL adapters of the real
@@ -179,6 +179,10 @@ code on disk between slices and restarts itself on it (systemd), so a deploy
 never throws away a slice in progress.
 
 ## Deploy
+
+Every push to `main` that passes CI deploys itself: the `deploy` job in
+`.github/workflows/ci.yml` runs `server/deploy.sh` on a GitHub-hosted runner, with
+the `production` environment's SSH key. By hand:
 
 ```bash
 GB_DEPLOY_HOST=user@host bash server/deploy.sh   # key login
