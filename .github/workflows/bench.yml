@@ -1,0 +1,47 @@
+name: Benchmark (B580)
+# Every pushed branch is benchmarked against main on the Arc B580 (self-hosted
+# runner, label b580) and merged + deployed when it is exact and significantly
+# faster; the report is posted as a comment on the commit. tools/bench_ci.sh.
+# Only files the benchmark loads can change its numbers (client/engine.js,
+# kernels, the core, the CPU verifier). Other pushes never start it, so they
+# never queue on the runner or pause production; tools/bench_ci.sh repeats the
+# check for a branch that changes both, and ends without measuring when only
+# // comments change in those files.
+on:
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'client/engine.js'
+      - 'kernels/**'
+      - 'core/**'
+      - 'shared/**'
+      - 'server/cpu_worker.cpp'
+      - 'server/build_cpu.sh'
+      - 'test/bench_ab.mjs'
+      - 'tools/bench_ci.sh'
+  workflow_dispatch:
+
+# One benchmark per branch at a time; a newer push replaces a queued one (a
+# running one finishes, so production is always resumed).
+concurrency:
+  group: bench-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write        # merge into main
+  pull-requests: write   # one PR per experiment: report, close or merge
+  issues: write          # PR labels
+
+jobs:
+  bench:
+    runs-on: [self-hosted, b580]
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Exactness, benchmark, report, merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GB_DEPLOY_HOST: ${{ secrets.GB_DEPLOY_HOST }}
+        run: bash tools/bench_ci.sh

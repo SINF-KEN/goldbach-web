@@ -1,0 +1,36 @@
+name: Server updates (VPS)
+# Weekly: the VPS's Ubuntu packages and kernel, a reboot when Ubuntu asks for one,
+# then checks that the site, the coordinator and the CPU worker are back
+# (tools/server_update.sh, on the B580 runner, which already deploys to the VPS).
+# By hand (Actions > Server updates > Run workflow), "release_upgrade" also moves
+# the VPS to the next Ubuntu release: 26.10 brings Linux 7.3 (from 24.04, run it
+# twice: 24.04 -> 26.04 -> 26.10). Never automatic.
+on:
+  schedule:
+    - cron: "41 3 * * 2"     # Tuesdays 03:41 UTC
+  workflow_dispatch:
+    inputs:
+      release_upgrade:
+        description: "Also upgrade to the next Ubuntu release (26.10: Linux 7.3)"
+        type: boolean
+        default: false
+
+# never at the same time as a deploy (ci.yml, refresh-reference.yml)
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    runs-on: [self-hosted, b580]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v6
+      - name: Update the VPS
+        env:
+          GB_DEPLOY_HOST: ${{ secrets.GB_DEPLOY_HOST }}
+          RELEASE_UPGRADE: ${{ inputs.release_upgrade && '1' || '0' }}
+        run: bash tools/server_update.sh

@@ -1,0 +1,10 @@
+client/core.js
+client/core.wasm
+build/
+*.db
+*.db-*
+*.token
+bench-out/
+node_modules/
+server/VERSION.json
+server-rs/target/

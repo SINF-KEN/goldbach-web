@@ -1,0 +1,22 @@
+[package]
+name = "goldbach-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = "0.8.9"
+flate2 = "1.1.10"
+libc = "0.2.191"
+rand = "0.10.3"
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+serde_json = { version = "1.0.154", features = ["preserve_order"] }
+sha2 = "0.11.1"
+tar = "0.4.46"
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "net", "signal"] }
+ureq = "3"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "unwind"

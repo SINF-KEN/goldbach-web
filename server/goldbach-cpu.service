@@ -1,0 +1,37 @@
+# goldbach-web CPU worker on the VPS: verifies web slices with spare CPU only
+# (idle scheduling class: it never takes time another process wants; memory cap;
+# first in line for the OOM killer). Installed by server/deploy.sh.
+[Unit]
+Description=goldbach-web CPU worker (idle CPU only)
+After=goldbach-web.service network-online.target
+Wants=goldbach-web.service
+
+[Service]
+User=goldbach
+Group=goldbach
+WorkingDirectory=/opt/goldbach/cpu
+Environment=GB_STATE_DIR=/opt/goldbach/cpu GB_CPU_BIN=/opt/goldbach/app/server/cpu_worker GOLDBACH_URL=http://172.18.0.1:8090
+ExecStart=/opt/goldbach/app/server/goldbach-cpu-worker
+CPUSchedulingPolicy=idle
+Nice=19
+IOSchedulingClass=idle
+MemoryHigh=240M
+MemoryMax=300M
+OOMScoreAdjust=1000
+# exits 0 between slices after a deploy: started again on the new code
+Restart=always
+RestartSec=10
+# exit 2 = the self-test computed a wrong answer: stay down
+RestartPreventExitStatus=2
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/opt/goldbach/cpu
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target

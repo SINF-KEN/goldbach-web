@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Goldbach Verification 4×10^18: Oliveira e Silva, Herzog, Pardi</title>
+<meta name="description" content="Goldbach conjecture verification beyond 4×10^18: the tables and figures of Oliveira e Silva, Herzog and Pardi (2014), recomputed live up to 5×10^18.">
+<link rel="canonical" href="https://goldbach.net01.io/paper">
+<meta name="theme-color" content="#15161c">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Goldbach Verification Network">
+<meta property="og:url" content="https://goldbach.net01.io/paper">
+<meta property="og:title" content="Live paper: Goldbach conjecture statistics above 4×10^18">
+<meta property="og:description" content="Every figure of the 4×10^18 Goldbach verification paper, recomputed live as the verification moves toward 5×10^18.">
+<meta property="og:image" content="https://goldbach.net01.io/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://goldbach.net01.io/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Dataset","name":"Goldbach conjecture verification above 4×10^18 (continuing Oliveira e Silva, Herzog and Pardi)","alternateName":"Goldbach conjecture verification 4 10^18 Oliveira e Silva Herzog Pardi","keywords":["Goldbach conjecture","verification","4×10^18","Oliveira e Silva","Herzog","Pardi","minimal Goldbach partition","prime gaps"],
+ "url":"https://goldbach.net01.io/paper","isAccessibleForFree":true,"inLanguage":"en",
+ "description":"Minimal Goldbach partitions p(n), first occurrences S(p), counts L(p,x), twin-prime and prime counts for even numbers from 4×10^18 toward 5×10^18, updated live as the verification proceeds.",
+ "isBasedOn":{"@type":"ScholarlyArticle","name":"Empirical verification of the even Goldbach conjecture and computation of prime gaps up to 4·10^18",
+   "author":[{"@type":"Person","name":"Tomás Oliveira e Silva"},{"@type":"Person","name":"Siegfried Herzog"},{"@type":"Person","name":"Silvio Pardi"}],
+   "datePublished":"2014","sameAs":"https://doi.org/10.1090/S0025-5718-2013-02787-1"}}
+</script>
+<link rel="alternate" type="text/markdown" href="https://goldbach.net01.io/llms.txt" title="Site summary for AI agents">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preload" href="paper.json" as="fetch" crossorigin>
+<style>
+:root { color-scheme: light dark; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0 auto; max-width: 48em; font: 13px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+       padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+                calc(40px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+pre { margin: 0; font: inherit; white-space: pre; overflow-x: auto; }
+a { color: inherit; }
+h1, h2, h3 { font: inherit; margin: 0; }
+h1 { font-weight: 700; margin: 0 0 12px; }
+h2 { font-weight: 700; margin: 22px 0 6px; }
+h3 { font-weight: 700; margin: 16px 0 4px; }
+p { margin: 6px 0; }
+sup, sub { line-height: 0; }
+hr { border: 0; border-top: 1px dashed; opacity: .4; margin: 14px 0; }
+figure { margin: 10px 0 18px; }
+figcaption { opacity: .75; font-size: .92em; margin-top: 4px; }
+svg.fig { display: block; width: 100%; height: auto; overflow: visible; }
+.grid { stroke: currentColor; stroke-opacity: .13; stroke-dasharray: 3 5; }
+.axis { fill: currentColor; opacity: .7; font: 10px ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.frame { fill: none; stroke: currentColor; stroke-opacity: .5; }
+.old { fill: currentColor; fill-opacity: .4; }
+.oldc { fill: none; stroke: currentColor; stroke-opacity: .55; }
+.new { fill: #e2a52a; }
+.newc { fill: none; stroke: #e2a52a; stroke-width: 1.3; }
+.line1 { fill: none; stroke: #2fb89a; stroke-width: 2; }
+.line2 { fill: none; stroke: #e2a52a; stroke-width: 2; }
+.prog { stroke: #8fe388; stroke-width: 1.4; stroke-dasharray: 1.5 4; stroke-linecap: round; animation: progpulse 2.4s ease-in-out infinite; }
+@keyframes progpulse { 50% { stroke-opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .prog { animation: none; } }
+.ref { stroke: currentColor; stroke-opacity: .45; stroke-dasharray: 6 4; }
+.key-new { color: #e2a52a; }
+.key-1 { color: #2fb89a; }
+.muted { opacity: .7; }
+.todo { border: 1px dashed; border-color: color-mix(in srgb, currentColor 40%, transparent); padding: 6px 10px; }
+</style>
+</head>
+<body>
+<p class="muted"><a href="/">← dashboard</a></p>
+<h1>Goldbach conjecture verification, live paper: the statistics of 4×10<sup>18</sup> to 5×10<sup>18</sup></h1>
+<p>This page is inspired by, and follows section by section,
+<a href="https://doi.org/10.1090/S0025-5718-2013-02787-1" rel="noopener">T. Oliveira e Silva, S. Herzog and S. Pardi,
+<cite>Empirical verification of the even Goldbach conjecture and computation of prime gaps up to 4·10<sup>18</sup></cite>,
+Math. Comp. 83 (2014), 2033–2060</a>. Their verification stopped at 4×10<sup>18</sup>; this project continues it.
+Each figure below is recomputed in your browser from the verifier's statistics as they arrive, next to
+<a href="https://sweet.ua.pt/tos/goldbach.html" rel="noopener">their published data</a> up to 4×10<sup>18</sup>.
+Numbers refresh every 5 minutes.</p>
+<pre id="status" data-md="skip">loading…</pre>
+<p class="muted">Notation as in the paper. p(n) is the smallest prime p such that n − p is prime (the minimal Goldbach
+partition). S(p) is the least even n with p(n) = p. L(p, x) is the number of even n ≤ x with p(n) = p.
+<span class="key-new">■ gold</span> marks this project's data above 4×10<sup>18</sup>; grey marks the paper's data.</p>
+
+<h2>1. Methods</h2>
+<figure>
+  <svg class="fig" id="fig1" viewBox="0 0 620 230" role="img" aria-label="Figure 1-2: B580 time per 10^12 integers against x"></svg>
+  <figcaption>Figures 1–2, live: time the native B580 GPU verifier needs per 10<sup>12</sup> integers,
+  for each verified slice, against the slice's position x. The paper plots the time to sieve 2<sup>30</sup> integers
+  on two 2012 CPUs; here the whole job (sieve and minimal Goldbach partition of every even) is shown.</figcaption>
+</figure>
+
+<h2>2.1 Minimal Goldbach partitions</h2>
+<h3>Table 4, live: record-breaking p(n) above 4×10<sup>18</sup></h3>
+<p class="muted">Each row is an even n ≥ 4×10<sup>18</sup> whose p(n) is larger than that of every even between
+4×10<sup>18</sup> and n (tracked for p(n) ≥ 3000). The record up to 4×10<sup>18</sup> is p(n) = 9781 at
+n = 3 325 581 707 333 960 528.</p>
+<pre id="tab4" data-md="skip">…</pre>
+<h3>Table 5, live: first occurrences S(p) found above 4×10<sup>18</sup></h3>
+<p class="muted">The paper's table lists 105 primes p ≤ 9769 that are never p(n) for n ≤ 4×10<sup>18</sup>, so their
+S(p) is above 4×10<sup>18</sup>. Because this verification runs contiguously upward from 4×10<sup>18</sup>, the first even
+it finds with p(n) = p is S(p) itself: new mathematical data.</p>
+<pre id="tab5" data-md="skip">…</pre>
+<figure>
+  <svg class="fig" id="fig3" viewBox="0 0 620 250" role="img" aria-label="Figure 3: Q1(p) against p"></svg>
+  <figcaption>Figure 3, live: Q<sub>1</sub>(p) = p / (log<sup>2</sup> S(p) · log log S(p)) for every known S(p).
+  Granville's conjecture p(n) = O(log<sup>2</sup> n log log n) predicts that it stays bounded; the two refined
+  constants 1.515 and 1.701 are dashed.</figcaption>
+</figure>
+<figure>
+  <svg class="fig" id="fig4" viewBox="0 0 620 250" role="img" aria-label="Figure 4: Q2(p,x) for p < 250"></svg>
+  <figcaption>Figure 4, live: Q<sub>2</sub>(p, x) = (L̂ − L) / √(2 L log log L) for every p &lt; 250, where L counts the
+  evens in [4×10<sup>18</sup>, x] with p(n) = p in the exactly sampled segments (about 1 in 256) and L̂ is the
+  Hardy–Littlewood prime k-tuple prediction for the same evens, from the paper's constants C<sub>p,k</sub>.
+  Values within about ±1 mean the conjecture predicts these counts as well as it did below 4×10<sup>18</sup>.
+  A new column is added every 5×10<sup>15</sup>; the rightmost column is now.</figcaption>
+</figure>
+<figure>
+  <svg class="fig" id="fig5a" viewBox="0 0 620 220" role="img" aria-label="Figure 5 top: Q3(p) against pi(p)"></svg>
+  <svg class="fig" id="fig5b" viewBox="0 0 620 220" role="img" aria-label="Figure 5 bottom: Q4(p) Q3(p) against pi(p)"></svg>
+  <figcaption>Figure 5, live: Q<sub>3</sub>(p) = e<sup>π(p)/(0.755 log x − 4.19)</sup> L(p, x) / π(x) (top) and
+  Q<sub>4</sub>(p)Q<sub>3</sub>(p) (bottom) for 2 ≤ π(p) ≤ 1000, at the current x. L(p, x) is the paper's count up to
+  4×10<sup>18</sup> plus this project's count above it (exact for p ≥ 3000, scaled from the sampled segments below).
+  Circles: p mod 3 = 1; disks: the rest. Q<sub>4</sub> = 1 ∓ 0.04 Δ(p), Δ(p) = π(p; 3, 2) − π(p; 3, 1).</figcaption>
+</figure>
+<figure>
+  <svg class="fig" id="fig6" viewBox="0 0 620 250" role="img" aria-label="Figure 6: Q5(p) against p"></svg>
+  <figcaption>Figure 6, live: Q<sub>5</sub>(p) = π(p) / (0.755 log<sup>2</sup> S − 0.755 log S log log S − 4.19 log S),
+  S = S(p), for p &gt; 1000. The paper's model of the decay of L(p, x) predicts Q<sub>5</sub>(p) ≈ 1.</figcaption>
+</figure>
+
+<h2>2.2 Prime gaps</h2>
+<p class="muted">g<sub>k</sub> = p<sub>k+1</sub> − p<sub>k</sub> is the gap after the prime p<sub>k</sub>; P(g) is the
+smallest prime followed by a gap of exactly g; N(g, x) counts the gaps g with p<sub>k+1</sub> ≤ x. The verifier records
+every gap exactly in count and total length, and every gap ≥ 700 with its first occurrence (a bit-parallel test on
+every segment); the full N(g) and the sums of g<sup>k</sup> come from walking every gap of the sampled segments (1 in 256),
+from the release that added the counter onward.</p>
+<pre id="gapstatus" data-md="skip">…</pre>
+<h3>Table 8, live: record gaps above the start of the gap data</h3>
+<pre id="tab8" data-md="skip">…</pre>
+<h3>Table 9, live: first occurrences P(g) found above 4×10<sup>18</sup></h3>
+<p class="muted">The paper's table lists the gaps g ≤ 1474 never seen up to 4×10<sup>18</sup>. The first time this
+verification sees one, above 4×10<sup>18</sup>, gives P(g), as long as the gap data covers everything from
+4×10<sup>18</sup> up to there.</p>
+<pre id="tab9" data-md="skip">…</pre>
+<figure>
+  <svg class="fig" id="fig7" viewBox="0 0 620 250" role="img" aria-label="Figure 7: Q6(g) against g"></svg>
+  <figcaption>Figure 7, live: Q<sub>6</sub>(g) = g / log<sup>2</sup> P(g) for g &gt; 4. Cramér's, Granville's (2e<sup>−γ</sup>
+  ≈ 1.123) and Shanks' conjectures are about its limit.</figcaption>
+</figure>
+<figure>
+  <svg class="fig" id="fig8" viewBox="0 0 620 250" role="img" aria-label="Figure 8: Q7(g,x) for g up to 212"></svg>
+  <figcaption>Figure 8, live: Q<sub>7</sub>(g, x) = (N̂ − N) / √(2 N log log N) for 2 ≤ g ≤ 212, where N counts the gaps g
+  in the sampled segments and N̂ is the Hardy–Littlewood prediction for the same integers, from the paper's
+  constants A<sub>g,k</sub>.</figcaption>
+</figure>
+<figure>
+  <svg class="fig" id="fig9" viewBox="0 0 620 230" role="img" aria-label="Figure 9: Q8(g) against g"></svg>
+  <figcaption>Figure 9, live: Q<sub>8</sub>(g) = e<sup>g/(0.960 log x − 3.58)</sup> (log<sup>2</sup>x / x) N(g, x) / A<sub>g,2</sub>,
+  scaled as the paper's 5·10<sup>−16</sup> e<sup>0.0266 g</sup> at 4×10<sup>18</sup>, for 2 ≤ g ≤ 1000. N(g, x) is the paper's
+  count to 4×10<sup>18</sup> plus this project's (exact for g ≥ 700, scaled from the sampled segments below), at x = 4×10<sup>18</sup>
+  plus the span with gap data.</figcaption>
+</figure>
+<figure>
+  <svg class="fig" id="fig10" viewBox="0 0 620 230" role="img" aria-label="Figure 10: Q9(g) against g"></svg>
+  <figcaption>Figure 10, live: Q<sub>9</sub>(g) = g / ((0.960 log P − 3.58)(log P − 2 log log P + log 2)), P = P(g), for g ≥ 100.
+  The model of N(g, x) predicts Q<sub>9</sub> ≈ 1, close to Shanks' g ~ log<sup>2</sup> P(g).</figcaption>
+</figure>
+<h3>Table 12, live: prime gap moments</h3>
+<p class="muted">D<sub>k</sub> = Σ g<sup>k</sup> over the gaps in the range (D<sub>1</sub> exact; D<sub>2</sub>…D<sub>4</sub>
+from the sampled segments, scaled to every gap), against the paper's fit
+D̂<sub>k</sub>(x) = k! x log<sup>k−1</sup>x Σ d<sub>kn</sub> / log<sup>n</sup>x (Heath-Brown's conjecture generalised).</p>
+<pre id="tab12" data-md="skip">…</pre>
+
+<h3>Table 11, live: twin primes and primes above 4×10<sup>18</sup></h3>
+<pre id="tab11" data-md="skip">…</pre>
+<figure>
+  <svg class="fig" id="fig11" viewBox="0 0 620 220" role="img" aria-label="Twin-prime and prime count deviation against x"></svg>
+  <figcaption>Exact counts from 4×10<sup>18</sup> to x against their predictions:
+  <span class="key-1">primes</span> against li(x) − li(4×10<sup>18</sup>) and
+  <span class="key-new">twin primes</span> against 2C<sub>2</sub>∫dt/log<sup>2</sup>t, as parts per million.</figcaption>
+</figure>
+
+<hr>
+<p class="muted">Data: the B580 native verifier's exact statistics (every slice; sampled histogram on every 256th
+segment), synced every 10 minutes. Reference data: Oliveira e Silva's tables t0 and t1 (2012). Raw feed:
+<a href="/api/results">/api/results</a>. Inspired by the work of Oliveira e Silva, Herzog and Pardi; any error here is ours.</p>
+<script type="module" src="paper.js"></script>
+</body>
+</html>

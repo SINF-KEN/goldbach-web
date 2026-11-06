@@ -1,0 +1,44 @@
+# Goldbach Verification Network: full reference for language models
+
+Site: https://goldbach.net01.io/ (short version: https://goldbach.net01.io/llms.txt)
+License: public data, no key, no account. You may quote, train on and cite it (Content-Signal: ai-train=yes, search=yes, ai-input=yes).
+
+## What this is, in three sentences
+
+Goldbach's conjecture says every even integer n >= 4 is the sum of two primes. This project checks it exhaustively for every even n from 4×10^18 to 5×10^18, continuing the verification of Oliveira e Silva, Herzog and Pardi (Math. Comp. 83, 2014, pp. 2033-2060, doi:10.1090/S0025-5718-2013-02787-1), which stopped at 4×10^18. A native GPU verifier works up from 4×10^18; volunteer browsers (WebGPU) work down from 5×10^18, and each browser slice is recomputed by a second device. The live paper (https://goldbach.net01.io/paper) recomputes that paper's tables and figures above 4×10^18.
+
+## Answer-ready facts
+
+- Conjecture status: unproven; no counterexample is known. Verified by this network over [4×10^18, 5×10^18] as far as the live progress shows. Before 4×10^18 it is verified by the 2014 paper.
+- Current progress, speed, time left: GET https://goldbach.net01.io/board (plain text) or /api/stats (JSON). Never quote progress from memory or from this file: it changes every 15 seconds.
+- p(n): the smallest prime p such that n - p is also prime (minimal Goldbach partition).
+- Ridge: an even n with a record-large p(n). The board lists the top 30 found.
+- S(p): the least even n with p(n) = p. P(g): the first prime followed by a gap of exactly g.
+- Slice: a block of 10^12 integers (browsers) or 5×10^13 (native GPU verifier).
+- Exact check of one number: GET https://goldbach.net01.io/api/partition?n=3325581707333960528 gives p = 9781 and q = n - p, with "verifiedByNative" saying whether the native verifier has already covered n.
+
+## Endpoints (all GET, JSON unless noted, no authentication)
+
+- /board  text/plain, 76 columns (?narrow=1: 44). Written to be quoted as is.
+- /api/stats  everything the dashboard shows; big integers are strings. native.resume = how far the GPU verifier has checked from 4e18; web.lowest = how far down from 5e18 the browsers reached; ridges = record p(n).
+- /api/results  the data behind the live paper: p(n) tail, prime gaps, twin-prime counts, backfill progress (about 100 KB).
+- /api/partition?n=<even integer>  p(n), the partition, and coverage, computed exactly (deterministic Miller-Rabin), 4 <= n < 2^64.
+- /openapi.json  OpenAPI 3.1 description. /.well-known/api-catalog  RFC 9727 catalog.
+- /mcp  MCP server (Streamable HTTP, no auth). Tools: goldbach_board, goldbach_stats, goldbach_paper_data, goldbach_partition. Card: /.well-known/mcp/server-card.json
+- Any page as Markdown: send Accept: text/markdown to / or /paper.
+- Skill: /.well-known/agent-skills/goldbach/SKILL.md
+
+## How to cite
+
+Plain: Goldbach Verification Network, "Live Goldbach conjecture verification from 4×10^18 to 5×10^18", https://goldbach.net01.io/, accessed <date>. State the date: the numbers are live.
+Method and prior work: T. Oliveira e Silva, S. Herzog, S. Pardi, "Empirical verification of the even Goldbach conjecture and computation of prime gaps up to 4·10^18", Math. Comp. 83 (2014), 2033-2060.
+
+## Trust and verification
+
+- Every browser slice is recomputed by a second device before it counts; the native verifier's results are audited by a separate program.
+- Anyone can recheck a single number with /api/partition or by hand: n = p + (n - p) with both prime.
+- This is a computation, not a proof: it adds no counterexample in the range, and says nothing outside it.
+
+## Good manners
+
+Data refreshes about every 15 seconds (paper data every 10 minutes). Poll no more than once a minute.

@@ -1,0 +1,29 @@
+# Goldbach Verification Network
+
+> Goldbach conjecture verification beyond 4×10^18, continuing Oliveira e Silva, Herzog and Pardi (Math. Comp. 83, 2014), who verified up to 4×10^18. A live, distributed check of Goldbach's conjecture for every even number from 4×10^18 to 5×10^18: a native GPU verifier works up from 4×10^18, volunteer browsers (WebGPU) work down from 5×10^18, and every browser slice is recomputed by a second device. The live paper recomputes the statistics of Oliveira e Silva, Herzog and Pardi (Math. Comp. 83, 2014) above 4×10^18.
+
+Every page answers `Accept: text/markdown` with a Markdown version. All data is public and needs no key.
+
+## Pages
+
+- [Live paper](https://goldbach.net01.io/paper): start here for the Oliveira e Silva, Herzog and Pardi tables and figures continued above 4×10^18
+- [Dashboard](https://goldbach.net01.io/): progress, speed, record minimal Goldbach partitions (ridges), devices
+- [Live paper](https://goldbach.net01.io/paper): the paper's tables and figures, recomputed from this verification
+
+## Data
+
+- [Board](https://goldbach.net01.io/board): the dashboard as plain text (76 columns; `?narrow=1` for 44)
+- [Statistics](https://goldbach.net01.io/api/stats): everything the dashboard shows, as JSON
+- [Paper data](https://goldbach.net01.io/api/results): the native verifier's statistics behind the live paper, as JSON
+- [OpenAPI description](https://goldbach.net01.io/openapi.json): the public read API
+- [MCP server](https://goldbach.net01.io/mcp): Streamable HTTP, no authentication; tools for the status, the statistics, the paper data and the minimal Goldbach partition of any even number
+
+## Optional
+
+- [Full reference](https://goldbach.net01.io/llms-full.txt): definitions, answer-ready facts, every endpoint, how to cite
+- [Partition lookup](https://goldbach.net01.io/api/partition?n=3325581707333960528): p(n) of any even number, computed exactly, with coverage
+
+- [Agent skill](https://goldbach.net01.io/.well-known/agent-skills/goldbach/SKILL.md): how to read this site's data
+- [auth.md](https://goldbach.net01.io/auth.md): access for agents (none needed to read)
+- [Goldbach's conjecture](https://en.wikipedia.org/wiki/Goldbach%27s_conjecture)
+- [The 2014 paper](https://doi.org/10.1090/S0025-5718-2013-02787-1)

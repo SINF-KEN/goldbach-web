@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Goldbach Conjecture Verification Beyond 4×10^18, Live</title>
+<meta name="description" content="Goldbach conjecture verification from 4×10^18 to 5×10^18, continuing Oliveira e Silva, Herzog and Pardi (2014). Live GPU check, plus their paper's tables recomputed.">
+<link rel="canonical" href="https://goldbach.net01.io/">
+<link rel="alternate" type="text/markdown" href="https://goldbach.net01.io/llms.txt" title="Site summary for AI agents">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121212">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Goldbach Verification Network">
+<meta property="og:url" content="https://goldbach.net01.io/">
+<meta property="og:title" content="Goldbach Conjecture Verification, 4×10^18 to 5×10^18, Live">
+<meta property="og:description" content="Every even number from 4×10^18 to 5×10^18 checked to be a sum of two primes, live, by a GPU and volunteer browsers. Lend your GPU from the page.">
+<meta property="og:image" content="https://goldbach.net01.io/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Goldbach Verification Network: every even number from 4×10^18 to 5×10^18, checked to be a sum of two primes">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Goldbach Conjecture Verification, 4×10^18 to 5×10^18, Live">
+<meta name="twitter:description" content="Every even number from 4×10^18 to 5×10^18 checked to be a sum of two primes, live, by a GPU and volunteer browsers.">
+<meta name="twitter:image" content="https://goldbach.net01.io/og.png">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"Goldbach Verification Network","url":"https://goldbach.net01.io/",
+ "description":"A live, distributed verification of Goldbach's conjecture for every even number from 4×10^18 to 5×10^18.",
+ "about":{"@type":"Thing","name":"Goldbach's conjecture","sameAs":"https://en.wikipedia.org/wiki/Goldbach%27s_conjecture"},
+ "inLanguage":"en",
+ "hasPart":{"@type":"WebPage","name":"Live paper: Goldbach conjecture verification above 4×10^18 (Oliveira e Silva, Herzog, Pardi)","url":"https://goldbach.net01.io/paper"},
+ "mentions":{"@type":"ScholarlyArticle","name":"Empirical verification of the even Goldbach conjecture and computation of prime gaps up to 4·10^18","author":[{"@type":"Person","name":"Tomás Oliveira e Silva"},{"@type":"Person","name":"Siegfried Herzog"},{"@type":"Person","name":"Silvio Pardi"}],"sameAs":"https://doi.org/10.1090/S0025-5718-2013-02787-1"}}
+</script>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%227%22 fill=%22%2315161c%22/%3E%3Cpath d=%22M5 26 C12 20 18 12 27 5%22 stroke=%22%23e6b54a%22 stroke-width=%222.5%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M5 26 C14 23 20 19 27 14%22 stroke=%22%23ff5a52%22 stroke-width=%222%22 fill=%22none%22 stroke-linecap=%22round%22 opacity=%22.8%22/%3E%3C/svg%3E">
+<style>
+:root { color-scheme: light dark; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { margin: 0 auto; max-width: 86ch; font: 13px/1.45 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+       padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+                calc(40px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+@media (min-width: 1024px) { body { font-size: 14px; } }
+pre { margin: 0; font: inherit; white-space: pre; overflow-x: auto; }
+.text { margin: 0 0 .7em 2ch; }
+.flow { white-space: pre-wrap; overflow-wrap: anywhere; }
+a { color: inherit; }
+h1, h2 { font: inherit; margin: 0; }
+h1 { font-weight: 700; margin: 0 0 12px; }
+sup { line-height: 0; }
+hr { border: 0; border-top: 1px dashed; opacity: .4; margin: 14px 0; }
+.err { color: #d33; }
+.paper { display: block; margin: 0 0 14px; padding: 8px 12px; border: 1px solid #e2a52a; border-left-width: 4px;
+         border-radius: 3px; text-decoration: none; background: color-mix(in srgb, #e2a52a 9%, transparent); }
+.paper:hover, .paper:focus-visible { background: color-mix(in srgb, #e2a52a 18%, transparent); }
+.paper b { color: #e2a52a; }
+.paper .sub { display: block; opacity: .8; }
+.paper .btn { display: inline-block; margin-top: 8px; padding: 6px 16px; border-radius: 4px; font-weight: 700;
+              background: #e2a52a; color: #15161c; box-shadow: 0 1px 2px rgb(0 0 0 / .25); }
+.paper:hover .btn, .paper:focus-visible .btn { background: #f0b83c; }
+.dim { opacity: .65; }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 1ch; margin: 2px 0 2px 2ch; }
+input { font: inherit; width: 22ch; max-width: 100%; }
+button { font: inherit; padding: 4px 16px; touch-action: manipulation; }
+@media (pointer: coarse) {   /* phones and tablets: no zoom on focus, finger-sized targets */
+  input, button { font-size: 16px; min-height: 44px; }
+  input { flex: 1; min-width: 12ch; padding: 6px 8px; }
+}
+</style>
+</head>
+<body>
+<main>
+<h1>Goldbach conjecture verification: live from 4×10<sup>18</sup> to 5×10<sup>18</sup></h1>
+<a class="paper" href="/paper"><b>LIVE PAPER</b> the 2014 paper's tables and figures, recomputed above 4×10<sup>18</sup>.
+<span class="sub">Oliveira e Silva, Herzog and Pardi (Math. Comp. 83) stopped at 4×10<sup>18</sup>: their minimal Goldbach partitions, prime gaps and twin-prime counts, continued live from this verification.</span>
+<span class="btn">Open the live paper →</span></a>
+<pre id="board"><!--BOARD--></pre>
+<hr>
+<section data-md="skip">
+<h2>SERVER CPU, BY VERSION</h2>
+<pre id="srv-table">No server slices yet.</pre>
+<p class="text dim">Average speed of the slices the server's own CPU verified (one idle core), per deployed version, newest first.</p>
+</section>
+<hr>
+<h2>THIS DEVICE</h2>
+<div class="ctl" data-md="skip">name <input id="name" maxlength="40" autocomplete="off" placeholder="your device"> <button id="go">start</button> <button id="finish" hidden>stop after slice</button></div>
+<pre data-md="skip">  gpu      <span id="d-gpu">-</span>
+  2nd gpu  <span id="d-gpu2">-</span>
+  slice    <span id="d-slice">-</span>
+  progress <span id="d-prog">-</span>
+  speed    <span id="d-rate">-</span>
+  done     <span id="d-count">0</span> slices</pre>
+<p class="text flow" id="d-status">Runs on this device's GPU in the background (WebGPU). It keeps going until you press stop; a stopped slice goes back to the pool. "stop after slice" finishes the current slice first, so its work counts.</p>
+<hr>
+<h2>ABOUT</h2>
+<p class="text"><a href="https://en.wikipedia.org/wiki/Goldbach%27s_conjecture" rel="noopener">Goldbach's conjecture</a>
+says every even integer greater than 2 is the sum of two primes. It is unproven, and
+was <a href="https://sweet.ua.pt/tos/goldbach.html" rel="noopener">checked up to 4×10<sup>18</sup></a> by Oliveira e Silva, Herzog and Pardi. This network
+extends that check to 5×10<sup>18</sup>, in the open, with anyone's GPU.
+More about the conjecture: <a href="https://www.dimostriamogoldbach.it/en/" rel="noopener">Dimostriamo Goldbach</a>.</p>
+<p class="text">This project is inspired by their paper,
+<a href="https://doi.org/10.1090/S0025-5718-2013-02787-1" rel="noopener">Empirical verification of the even Goldbach
+conjecture and computation of prime gaps up to 4·10<sup>18</sup></a> (Math. Comp. 83, 2014).
+Its figures, recomputed live from this verification: <a href="/paper">the live paper</a>.</p>
+<p class="text">Each even n gets a pair n = p + q with p a small prime and q confirmed prime
+by a complete sieve; anything left over is settled by deterministic Miller-Rabin.
+Browsers run the same algorithm as the native B580 verifier (WebGPU + WebAssembly),
+and a browser slice only counts when a second device reproduces it bit for bit.
+Phones run a lighter mode (keep the screen on). The server itself verifies with
+its spare CPU. Raw board: <a href="/board">/board</a> (try: curl goldbach.net01.io/board).</p>
+</main>
+<script type="application/json" id="live-init"><!--LIVE--></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

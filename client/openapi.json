@@ -1,0 +1,117 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Goldbach Verification Network",
+    "version": "1",
+    "summary": "Live data of a distributed check of Goldbach's conjecture from 4e18 to 5e18",
+    "description": "The public, read-only API of goldbach.net01.io. No authentication. Big integers are JSON strings. Responses are cached at the edge for about 15 s; poll at most once a minute. The volunteer work protocol (/api/register, /api/lease, /api/result, ...) is not described here: only the site's own verifier can take part, see /auth.md.",
+    "contact": {"url": "https://goldbach.net01.io/"}
+  },
+  "servers": [{"url": "https://goldbach.net01.io"}],
+  "externalDocs": {"description": "Agent skill", "url": "https://goldbach.net01.io/.well-known/agent-skills/goldbach/SKILL.md"},
+  "paths": {
+    "/board": {
+      "get": {
+        "operationId": "getBoard",
+        "summary": "The dashboard as plain text: progress, speed, top 30 ridges, p(n) bands, devices, latest native slices",
+        "parameters": [{"name": "narrow", "in": "query", "description": "1: 44 columns instead of 76", "schema": {"type": "integer", "enum": [0, 1]}}],
+        "responses": {"200": {"description": "The board", "content": {"text/plain": {"schema": {"type": "string"}}}}}
+      }
+    },
+    "/api/stats": {
+      "get": {
+        "operationId": "getStats",
+        "summary": "Everything the dashboard shows, as JSON",
+        "responses": {"200": {"description": "Statistics", "content": {"application/json": {"schema": {
+          "type": "object",
+          "properties": {
+            "time": {"type": "number", "description": "Unix time of this snapshot"},
+            "range": {"type": "array", "items": {"type": "string"}, "description": "The interval verified, [4e18, 5e18]"},
+            "slice": {"type": "string", "description": "Browser slice size"},
+            "floor": {"type": "string", "description": "Browsers verify above this"},
+            "web": {"type": "object", "description": "Browser progress: evens, verified, open, disputed, primes, twins, pmax, lowest, recent"},
+            "native": {"type": "object", "description": "Native GPU verifier: resume, slices, rate, last, primes, twins, recent, backfill"},
+            "ridges": {"type": "array", "description": "Record minimal Goldbach partitions found so far"},
+            "hist": {"type": "array", "description": "Browser histogram of p(n)"},
+            "nativeHist": {"type": "array", "description": "Native histogram of p(n)"},
+            "speedHistory": {"type": "array"},
+            "serverRuns": {"type": "array", "description": "The server CPU verifier's recent slices"},
+            "devices": {"type": "array"},
+            "clients": {"type": "integer"},
+            "trusted": {"type": "integer"},
+            "banned": {"type": "integer"}
+          }
+        }}}}}
+      }
+    },
+    "/api/results": {
+      "get": {
+        "operationId": "getPaperData",
+        "summary": "The native verifier's statistics behind the live paper (/paper)",
+        "responses": {"200": {"description": "Paper data", "content": {"application/json": {"schema": {
+          "type": "object",
+          "properties": {
+            "time": {"type": "number"},
+            "tail": {"type": "array", "description": "Large p(n) histogram tail"},
+            "backfill": {"type": ["object", "null"], "description": "Progress of the prime-gap backfill run"},
+            "paper": {"type": "object", "description": "Tables and figure data"},
+            "webGaps": {"type": "object", "description": "Prime gaps over the browsers' verified slices"}
+          }
+        }}}}}
+      }
+    },
+    "/api/live": {
+      "get": {
+        "operationId": "getLive",
+        "summary": "The dashboard's incremental feed: what changed since the page's last poll",
+        "parameters": [
+          {"name": "narrow", "in": "query", "schema": {"type": "integer", "enum": [0, 1]}},
+          {"name": "since", "in": "query", "description": "Time of the last poll (t of the previous response)", "schema": {"type": "number"}},
+          {"name": "bh", "in": "query", "description": "Hash of the board held; the board is left out when current", "schema": {"type": "string"}},
+          {"name": "tiers", "in": "query", "description": "Speed chart resolutions held, seconds, comma separated", "schema": {"type": "string", "default": "10,300,3600"}},
+          {"name": "full", "in": "query", "description": "Resolutions to send in full", "schema": {"type": "string"}},
+          {"name": "runs", "in": "query", "description": "Newest server slice held", "schema": {"type": "number"}}
+        ],
+        "responses": {"200": {"description": "Changes", "content": {"application/json": {"schema": {"type": "object"}}}}}
+      }
+    },
+    "/api/partition": {
+      "get": {
+        "operationId": "getPartition",
+        "summary": "Minimal Goldbach partition p(n) of an even number, computed exactly, and whether this verification has covered it",
+        "parameters": [{"name": "n", "in": "query", "required": true, "schema": {"type": "string", "pattern": "^[0-9]+$"}, "description": "Even integer, 4 <= n < 2^64, decimal"}],
+        "responses": {
+          "200": {"description": "The partition", "content": {"application/json": {"schema": {"type": "object", "properties": {
+            "n": {"type": "string"}, "p": {"type": "integer"}, "q": {"type": "string"}, "statement": {"type": "string"},
+            "inRange": {"type": "boolean"}, "verifiedByNative": {"type": "boolean"}, "nativeResume": {"type": "string"}}}}}},
+          "400": {"description": "n is not an even integer in range"}
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Liveness",
+        "responses": {"200": {"description": "Up", "content": {"application/json": {"schema": {"type": "object", "properties": {"ok": {"type": "boolean"}}}}}}}
+      }
+    },
+    "/api/version": {
+      "get": {
+        "operationId": "getVersion",
+        "summary": "Hashes of the deployed engine and page",
+        "responses": {"200": {"description": "Versions", "content": {"application/json": {"schema": {"type": "object", "properties": {"engine": {"type": "string"}, "page": {"type": "string"}}}}}}}
+      }
+    },
+    "/mcp": {
+      "post": {
+        "operationId": "mcp",
+        "summary": "MCP server (Streamable HTTP, JSON responses): tools goldbach_board, goldbach_stats, goldbach_paper_data, goldbach_partition",
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"type": "object", "description": "A JSON-RPC 2.0 message"}}}},
+        "responses": {
+          "200": {"description": "JSON-RPC response", "content": {"application/json": {"schema": {"type": "object"}}}},
+          "202": {"description": "Notification accepted"}
+        }
+      }
+    }
+  }
+}

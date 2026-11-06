@@ -1,0 +1,44 @@
+# Weekly: rebuild client/paper.json (the live paper's reference data) from
+# Tomás Oliveira e Silva's published tables. When they changed: the page tests,
+# a commit to main and a deploy, all in this job (nothing to babysit).
+name: Refresh reference data
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: [self-hosted, b580]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download the tables and rebuild paper.json
+        run: |
+          d=$(mktemp -d)
+          for f in goldbach/t0 goldbach/t1 gaps/t0 gaps/t1; do
+            curl -sfL --retry 3 "https://sweet.ua.pt/tos/$f.txt.gz" -o "$d/${f/\//_}.txt.gz"
+          done
+          BIN=$(bash server-rs/build.sh)
+          "$(dirname "$BIN")/goldbach-tools" make-paper-json "$d/goldbach_t0.txt.gz" "$d/goldbach_t1.txt.gz" \
+            "$d/gaps_t0.txt.gz" "$d/gaps_t1.txt.gz" > client/paper.json
+      - name: Test, commit to main and deploy when the tables changed
+        # The push uses the workflow token, which starts no other workflow:
+        # this job runs the page tests and the deploy itself.
+        env:
+          GB_DEPLOY_HOST: ${{ secrets.GB_DEPLOY_HOST }}
+        run: |
+          if git diff --quiet -- client/paper.json; then echo "reference data unchanged"; exit 0; fi
+          CI_SCOPE=fast bash tools/ci_local.sh
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -qm "web: refresh the live paper's reference data (Oliveira e Silva's tables changed)" -- client/paper.json
+          git push -q origin HEAD:main
+          bash server/deploy.sh
