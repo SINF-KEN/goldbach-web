@@ -15,7 +15,10 @@ ExecStart=/opt/goldbach/app/server/goldbach-cpu-worker
 CPUSchedulingPolicy=idle
 Nice=19
 IOSchedulingClass=idle
-MemoryHigh=240M
+# 200M: the worker then picks the 1e9 segment (peak ~170 MB). At 240M it took
+# 3e9, which on real slices held ~330 MB with ~120 MB of it in swap (2026-11-08)
+# and kept the whole box swapping.
+MemoryHigh=200M
 MemoryMax=300M
 OOMScoreAdjust=1000
 # exits 0 between slices after a deploy: started again on the new code
