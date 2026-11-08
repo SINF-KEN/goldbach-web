@@ -59,6 +59,19 @@ function niceTicks(lo, hi, n = 6) {
   for (let t = Math.ceil(lo / step) * step; t <= hi + step * 1e-9; t += step) out.push(+t.toFixed(12));
   return out;
 }
+// The x axis of the figures against x: from 4e18 to a little past the current x
+// (at most 5e18), so the data fills the plot instead of its first seventh.
+function xAxis(x) {
+  const span = Math.max(x - X0, 1e15) * 1.12;
+  const raw = span / 5, mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw);
+  const hi = Math.min(5e18, X0 + Math.ceil(span / step) * step);
+  const ticks = [];
+  for (let k = 0; X0 + k * step <= hi * (1 + 1e-12); ++k) ticks.push(X0 + k * step);
+  const dec = Math.max(1, Math.min(6, -Math.floor(Math.log10(step / 1e18) + 1e-9)));
+  return { x: [X0, hi], xticks: ticks, xfmt: (v) => `${(v / 1e18).toFixed(dec)}e18` };
+}
+
 /** svg: target; o: { x: [lo, hi], y: [lo, hi], ylog, xfmt, yfmt, xticks, yticks, refs: [y...], series:
  *  [{ pts: [[x, y]], cls, r, shape: "dot" | "circle" | "line" }] } */
 function plot(svg, o) {
@@ -72,7 +85,9 @@ function plot(svg, o) {
   if (o.ylog) for (let e = Math.ceil(y0); e <= y1; ++e) yt.push(10 ** e);
   for (const t of xt) {
     el("line", { class: "grid", x1: X(t), x2: X(t), y1: MT, y2: H - MB }, svg);
-    el("text", { class: "axis", x: X(t), y: H - MB + 14, "text-anchor": "middle" }, svg).textContent = (o.xfmt ?? String)(t);
+    // the last label ends at the frame's edge instead of hanging past it
+    const anchor = X(t) > W - MR - 20 ? "end" : "middle";
+    el("text", { class: "axis", x: anchor === "end" ? W - MR : X(t), y: H - MB + 14, "text-anchor": anchor }, svg).textContent = (o.xfmt ?? String)(t);
   }
   for (const t of yt) {
     el("line", { class: "grid", x1: ML, x2: W - MR, y1: Y(t), y2: Y(t) }, svg);
@@ -88,11 +103,15 @@ function plot(svg, o) {
   }
   const inside = ([x, y]) => x >= x0 && x <= x1 && Number.isFinite(ty(y)) && ty(y) >= y0 && ty(y) <= y1;
   for (const s of o.series) {
-    const pts = s.pts.filter(inside);
     if (s.shape === "line") {
-      if (pts.length) el("path", { class: s.cls, d: pts.map(([x, y], i) => `${i ? "L" : "M"}${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join("") }, svg);
+      // a line may leave the y range (a spike at the start): clip it at the frame
+      const pts = s.pts.filter(([x, y]) => x >= x0 && x <= x1 && Number.isFinite(ty(y)));
+      const clip = `${svg.id}-clip`;
+      el("rect", { x: ML, y: MT, width: W - ML - MR, height: H - MT - MB }, el("clipPath", { id: clip }, svg));
+      if (pts.length) el("path", { class: s.cls, "clip-path": `url(#${clip})`, d: pts.map(([x, y], i) => `${i ? "L" : "M"}${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join("") }, svg);
       continue;
     }
+    const pts = s.pts.filter(inside);
     // one path of tiny arcs per series: thousands of points stay one DOM node
     const r = s.r ?? 1.6;
     const d = pts.map(([x, y]) => `M${(X(x) - r).toFixed(1)},${Y(y).toFixed(1)}a${r},${r} 0 1,0 ${2 * r},0a${r},${r} 0 1,0 ${-2 * r},0`).join("");
@@ -130,7 +149,8 @@ function render() {
   // Figures 1-2: B580 time per 1e12 integers against x
   const f1 = live.slices.map(([s, l, g]) => [Number(s), g / ((Number(l) - Number(s) + 2) / 1e12)]).filter((p) => p[1] > 0);
   const y1max = Math.max(1, ...f1.map((p) => p[1])) * 1.1;
-  plot($("fig1"), { x: [X0, 5e18], y: [0, y1max], xticks: niceTicks(X0, 5e18, 5), xfmt: (v) => `${(v / 1e18).toFixed(1)}e18`,
+  const xa = xAxis(x);
+  plot($("fig1"), { ...xa, y: [0, y1max],
                     yfmt: (v) => `${v} s`, progress: x, xlabel: "x", ylabel: "seconds per 10^12 integers",
                     series: [{ pts: f1, cls: "new", r: 1.4 }] });
 
@@ -171,7 +191,7 @@ function render() {
       pts4.push([xs, (Lh - L) / Math.sqrt(2 * L * ln(ln(L)))]);
     }
   }
-  plot($("fig4"), { progress: x, x: [X0, 5e18], y: [-1.5, 1.5], refs: [0], xticks: niceTicks(X0, 5e18, 5), xfmt: (v) => `${(v / 1e18).toFixed(1)}e18`,
+  plot($("fig4"), { progress: x, ...xa, y: [-1.5, 1.5], refs: [0],
                     xlabel: "x", ylabel: "Q2(p,x)", series: [{ pts: pts4, cls: "new", r: 1.6 }] });
 
   // Figure 5: Q3 and Q4 Q3 at x, L(p, x) = the paper's count to 4e18 + ours above it
@@ -225,9 +245,10 @@ function render() {
       row("primes", pc, ep) + "\n" + row("twin primes", tc, et) +
       "\n\nprediction: li(x) - li(4e18); twins 2·C2·∫dt/log²t, C2 = 0.66016…";
   }
-  const all = [...dev, ...devT].map((p) => Math.abs(p[1]));
-  const lim = Math.max(1, ...all) * 1.15;
-  plot($("fig11"), { progress: x, x: [X0, 5e18], y: [-lim, lim], refs: [0], xticks: niceTicks(X0, 5e18, 5), xfmt: (v) => `${(v / 1e18).toFixed(1)}e18`,
+  const settled = X0 + 0.02 * (x - X0);
+  const all = [...dev, ...devT].filter((p) => p[0] >= settled).map((p) => Math.abs(p[1]));
+  const lim = Math.max(0.1, ...all) * 1.15;
+  plot($("fig11"), { progress: x, ...xa, y: [-lim, lim], refs: [0],
                      yfmt: (v) => `${+v.toPrecision(3)}`, xlabel: "x", ylabel: "ppm",
                      series: [{ pts: dev, cls: "line1", shape: "line" }, { pts: devT, cls: "line2", shape: "line" }] });
 }
@@ -257,7 +278,7 @@ function renderGaps(x) {
     $("gapstatus").textContent = `gap data: none yet (${none})`;
     for (const id of ["tab8", "tab9", "tab12"]) $(id).textContent = none;
     plot($("fig7"), { x: [0, 1500], y: [0.2, 1], xlabel: "g", ylabel: "Q6(g)", series: [{ pts: old7, cls: "old", r: 1.1 }] });
-    plot($("fig8"), { x: [X0, 5e18], y: [-2, 2], refs: [0], xticks: niceTicks(X0, 5e18, 5), xfmt: (v) => `${(v / 1e18).toFixed(1)}e18`,
+    plot($("fig8"), { ...xAxis(x), y: [-2, 2], refs: [0],
                       xlabel: "x", ylabel: "Q7(g,x)", series: [], empty: none });
     plot($("fig9"), { x: [0, 1000], y: [1.2, 1.7], xlabel: "g", ylabel: "Q8(g)", series: [], empty: none });
     plot($("fig10"), { x: [100, 1500], y: [0.8, 1.6], refs: [1], xlabel: "g", ylabel: "Q9(g)", series: [{ pts: old10, cls: "old", r: 1.1 }] });
@@ -335,7 +356,7 @@ function renderGaps(x) {
       pts8.push([xs, (Nh - N) / Math.sqrt(2 * N * ln(ln(N)))]);
     }
   }
-  plot($("fig8"), { progress: Number(hiStr), x: [X0, 5e18], y: [-2, 2], refs: [0], xticks: niceTicks(X0, 5e18, 5), xfmt: (v) => `${(v / 1e18).toFixed(1)}e18`,
+  plot($("fig8"), { progress: Number(hiStr), ...xAxis(Math.max(x, Number(hiStr))), y: [-2, 2], refs: [0],
                     xlabel: "x", ylabel: "Q7(g,x)", series: [{ pts: pts8, cls: "new", r: 1.4 }] });
 
   // Figure 9: Q8 at x_eff = 4e18 + the span with gap data
@@ -355,17 +376,21 @@ function renderGaps(x) {
   // sampled segments), scaled to all gaps, with the standard error of a mean
   const W = G.walk ?? { n: 0, mom: [] };
   const hm = (k) => G.samp.reduce((acc, c, i) => acc + c * (2 * i) ** k, 0) / Math.max(1, W.n);
+  const walkedAll = W.n > 0 && W.n === G.n;                  // every gap walked: D2..D4 exact
   const rows = [[1, Number(G.d1), hi - lo, 0, true]];
   for (const k of [2, 3, 4]) {
+    if (walkedAll) { rows.push([k, Number(W.mom[k - 1]), Dhat(k, hi) - Dhat(k, lo), 0, true]); continue; }
     const est = W.n ? Number(W.mom[k - 1]) * (G.n / W.n) : NaN;
     const mean = hm(k), sd = Math.sqrt(Math.max(0, hm(2 * k) - mean * mean));
     rows.push([k, est, Dhat(k, hi) - Dhat(k, lo), W.n ? sd / mean / Math.sqrt(W.n) : NaN, false]);
   }
-  $("tab12").textContent = `in [${e18(lo)}, ${e18(hi)}]\n  k  ${"D_k".padStart(26)}  ${"fit".padStart(12)}  D_k/fit\n` +
-    rows.map(([k, d, f, rse, exact]) => `  ${k}  ${(exact ? sp(G.d1) : `${d.toExponential(9)}`).padStart(26)}  ` +
-      `${f.toExponential(4).padStart(12)}  ${(d / f).toFixed(6)}${exact ? "  exact" : `  ±${(rse * (d / f)).toFixed(6)}`}`).join("\n") +
-    `\n\nD1 exact (last prime minus the first one's predecessor); D2..D4 from the ${sp(W.n)} gaps of the sampled segments,` +
-    "\nscaled to all gaps (± one standard error). The fit is the paper's Table 12 (N = 2).";
+  $("tab12").textContent = `in [${e18(lo)}, ${e18(hi)}]\n  k  ${"D_k".padStart(32)}  ${"fit".padStart(12)}  D_k/fit\n` +
+    rows.map(([k, d, f, rse, exact]) => `  ${k}  ${(k === 1 ? sp(G.d1) : exact ? sp(W.mom[k - 1]) : `${d.toExponential(9)}`).padStart(32)}  ` +
+      `${f.toExponential(4).padStart(12)}  ${(d / f).toFixed(6)}${exact ? "  exact" : `  ±${(rse * (d / f)).toFixed(6)}`}`).join("\n");
+  $("tab12note").textContent = walkedAll
+    ? `D1 is the last prime minus the first one's predecessor; D2…D4 sum g^k over all ${sp(W.n)} gaps, so every row is exact. The fit is the paper's Table 12 (N = 2).`
+    : `D1 is exact (the last prime minus the first one's predecessor); D2…D4 come from the ${sp(W.n)} gaps of the sampled segments, ` +
+      "scaled to all gaps (± one standard error). The fit is the paper's Table 12 (N = 2).";
 }
 
 let loadError = "";
