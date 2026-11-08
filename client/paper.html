@@ -34,6 +34,7 @@ body { margin: 0 auto; max-width: 48em; font: 13px/1.45 ui-monospace, "SF Mono",
        padding: max(12px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
                 calc(40px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
 pre { margin: 0; font: inherit; white-space: pre; overflow-x: auto; }
+#status, #gapstatus { white-space: pre-wrap; overflow-wrap: anywhere; }
 a { color: inherit; }
 h1, h2, h3 { font: inherit; margin: 0; }
 h1 { font-weight: 700; margin: 0 0 12px; }
@@ -110,7 +111,8 @@ it finds with p(n) = p is S(p) itself: new mathematical data.</p>
   evens in [4×10<sup>18</sup>, x] with p(n) = p in the exactly sampled segments (about 1 in 256) and L̂ is the
   Hardy–Littlewood prime k-tuple prediction for the same evens, from the paper's constants C<sub>p,k</sub>.
   Values within about ±1 mean the conjecture predicts these counts as well as it did below 4×10<sup>18</sup>.
-  A new column is added every 5×10<sup>15</sup>; the rightmost column is now.</figcaption>
+  A new column is added every 5×10<sup>15</sup>; the rightmost column is now. The x axis of Figures 1–2, 4, 8 and 11
+  reaches a little past the verification and widens with it, up to 5×10<sup>18</sup>.</figcaption>
 </figure>
 <figure>
   <svg class="fig" id="fig5a" viewBox="0 0 620 220" role="img" aria-label="Figure 5 top: Q3(p) against pi(p)"></svg>
@@ -168,6 +170,7 @@ verification sees one, above 4×10<sup>18</sup>, gives P(g), as long as the gap 
 from the sampled segments, scaled to every gap), against the paper's fit
 D̂<sub>k</sub>(x) = k! x log<sup>k−1</sup>x Σ d<sub>kn</sub> / log<sup>n</sup>x (Heath-Brown's conjecture generalised).</p>
 <pre id="tab12" data-md="skip">…</pre>
+<p class="muted" id="tab12note"></p>
 
 <h3>Table 11, live: twin primes and primes above 4×10<sup>18</sup></h3>
 <pre id="tab11" data-md="skip">…</pre>
